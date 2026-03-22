@@ -1,5 +1,3 @@
-# Speek-interpreter-project
-Advanced OOP Mini Interpreter
 # 🎯 SPEEK Interpreter — Advanced OOP Group Project  
 
 This project is part of the **Advanced Object Oriented Programming (Java)** coursework.  
@@ -94,11 +92,11 @@ say result
 - Do not push broken code to main branch  
 
 Example:
-git pull
+ ``` git pull
 git add .
 git commit -m "Parser expression handling added"
 git push
-
+ ```
 
 ---
 
