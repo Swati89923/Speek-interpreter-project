@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="{F481B379-6742-48B5-B70A-955EC1E3C45F}" src="https://github.com/user-attachments/assets/ba244cfb-0b8b-4821-95cd-bb4272caa20e" /># Speek-interpreter-project
+# Speek-interpreter-project
 Advanced OOP Mini Interpreter
 # 🎯 SPEEK Interpreter — Advanced OOP Group Project  
 
@@ -61,11 +61,11 @@ Traverses the tree and executes instructions using a shared **Environment (varia
 
 ## ▶️ Sample SPEEK Program  
 
-let x be 10
+ ``` let x be 10
 let y be 3
 let result be x + y * 2
-say result
-
+say result  
+ ```
 
 ✅ Expected Output  
 16
