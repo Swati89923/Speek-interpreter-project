@@ -1,4 +1,4 @@
-# Speek-interpreter-project
+<img width="1920" height="1080" alt="{F481B379-6742-48B5-B70A-955EC1E3C45F}" src="https://github.com/user-attachments/assets/ba244cfb-0b8b-4821-95cd-bb4272caa20e" /># Speek-interpreter-project
 Advanced OOP Mini Interpreter
 # 🎯 SPEEK Interpreter — Advanced OOP Group Project  
 
@@ -47,17 +47,17 @@ Traverses the tree and executes instructions using a shared **Environment (varia
 
 ## 🗂️ Project Structure  
 
-speek-interpreter
+```speek-interpreter
 │
 ├── tokenizer → Tokenizer & Token classes
 ├── parser → Parser & Expression Node classes
 ├── instruction → Assign / Print / If / Repeat instructions
 ├── environment → Variable storage logic
 ├── interpreter → Pipeline controller
-└── main → CLI entry point
+└── main → CLI entry point 
 
 
----
+ ```
 
 ## ▶️ Sample SPEEK Program  
 
