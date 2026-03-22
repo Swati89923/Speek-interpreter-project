@@ -1,4 +1,4 @@
-# 🎯 SPEEK Interpreter — Advanced OOP Group Project  
+#  SPEEK Interpreter — Advanced OOP Group Project  
 
 This project is part of the **Advanced Object Oriented Programming (Java)** coursework.  
 Our team is building a **Mini Interpreter** for the toy scripting language **SPEEK (Simple Plain English Execution Kit)**.
@@ -15,7 +15,7 @@ The interpreter reads source code written in SPEEK language, parses it, and exec
 
 ---
 
-## 🚀 Project Objective  
+##  Project Objective  
 
 The main goal of this project is to understand how programming languages work internally by implementing:
 
@@ -28,7 +28,7 @@ such as class hierarchy design, abstraction, encapsulation, and responsibility s
 
 ---
 
-## 🧠 How Our Interpreter Works  
+##  How Our Interpreter Works  
 
 The interpreter follows a **3-step pipeline architecture**:
 
