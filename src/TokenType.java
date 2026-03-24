@@ -27,3 +27,4 @@ public enum TokenType {
     NEWLINE,        
     INDENT,         
     EOF             
+}
