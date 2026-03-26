@@ -47,3 +47,66 @@ public class Parser {
         }
     }
 }
+// ================= EXPRESSION PARSING =================
+
+private Expression parseExpression() {
+
+    Expression left = parseTerm();
+
+    while (!isAtEnd() &&
+          (peek().getType() == TokenType.PLUS ||
+           peek().getType() == TokenType.MINUS)) {
+
+        String op = advance().getValue();
+        Expression right = parseTerm();
+
+        left = new BinaryOpNode(left, op, right);
+    }
+
+    return left;
+}
+
+private Expression parseTerm() {
+
+    Expression left = parsePrimary();
+
+    while (!isAtEnd() &&
+          (peek().getType() == TokenType.STAR ||
+           peek().getType() == TokenType.SLASH)) {
+
+        String op = advance().getValue();
+        Expression right = parsePrimary();
+
+        left = new BinaryOpNode(left, op, right);
+    }
+
+    return left;
+}
+
+private Expression parsePrimary() {
+
+    Token t = peek();
+
+    if (t.getType() == TokenType.NUMBER) {
+        advance();
+        return new NumberNode(Double.parseDouble(t.getValue()));
+    }
+
+    if (t.getType() == TokenType.STRING) {
+        advance();
+        return new StringNode(t.getValue());
+    }
+
+    if (t.getType() == TokenType.IDENTIFIER) {
+        advance();
+        return new VariableNode(t.getValue());
+    }
+
+    throw new RuntimeException(
+        "Line " + t.getLine() + " : Expected number / string / variable"
+    );
+}
+
+private Token advance() {
+    return tokens.get(pos++);
+}
