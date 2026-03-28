@@ -110,3 +110,64 @@ private Expression parsePrimary() {
 private Token advance() {
     return tokens.get(pos++);
 }
+
+private Instruction parseAssign() {
+
+    advance(); // LET
+
+    Token name = peek();
+    advance();
+
+    advance(); // BE
+
+    Expression expr = parseExpression();
+
+    return new AssignInstruction(name.getValue(), expr);
+}
+
+private Instruction parsePrint() {
+
+    advance(); // SAY
+
+    Expression expr = parseExpression();
+
+    return new PrintInstruction(expr);
+}
+
+private Instruction parseIf() {
+
+    advance(); // IF
+
+    Expression condition = parseExpression();
+
+    advance(); // THEN
+
+    List<Instruction> body = new ArrayList<>();
+
+    skipNewlines();
+
+    body.add(parseInstruction());
+
+    return new IfInstruction(condition, body);
+}
+
+
+private Instruction parseRepeat() {
+
+    advance(); // REPEAT
+
+    Token num = peek();
+    advance();
+
+    int count = (int) Double.parseDouble(num.getValue());
+
+    advance(); // TIMES
+
+    List<Instruction> body = new ArrayList<>();
+
+    skipNewlines();
+
+    body.add(parseInstruction());
+
+    return new RepeatInstruction(count, body);
+}
