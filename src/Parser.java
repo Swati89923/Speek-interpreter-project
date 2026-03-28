@@ -22,16 +22,16 @@ public class Parser {
         return list;
     }
 
-    private Instruction parseInstruction() {
-        Token t = peek();
+   private Instruction parseInstruction() {
+    Token t = peek();
 
-        if (t.getType() == TokenType.LET) return null;
-        if (t.getType() == TokenType.SAY) return null;
-        if (t.getType() == TokenType.IF) return null;
-        if (t.getType() == TokenType.REPEAT) return null;
+    if (t.getType() == TokenType.LET) return parseAssign();
+    if (t.getType() == TokenType.SAY) return parsePrint();
+    if (t.getType() == TokenType.IF) return parseIf();
+    if (t.getType() == TokenType.REPEAT) return parseRepeat();
 
-        throw new RuntimeException("Unknown instruction at line " + t.getLine());
-    }
+    throw new RuntimeException("Unknown instruction at line " + t.getLine());
+}
 
     private Token peek() {
         return tokens.get(pos);
@@ -46,7 +46,7 @@ public class Parser {
             pos++;
         }
     }
-}
+
 // ================= EXPRESSION PARSING =================
 
 private Expression parseExpression() {
@@ -118,7 +118,7 @@ private Instruction parseAssign() {
     Token name = peek();
     advance();
 
-    advance(); // BE
+    expect(TokenType.BE, "Expected 'be'"); // BE
 
     Expression expr = parseExpression();
 
@@ -140,13 +140,14 @@ private Instruction parseIf() {
 
     Expression condition = parseExpression();
 
-    advance(); // THEN
+    expect(TokenType.THEN, "Expected 'then'");// THEN
 
     List<Instruction> body = new ArrayList<>();
 
     skipNewlines();
 
-    body.add(parseInstruction());
+   body.add(parseInstruction());
+
 
     return new IfInstruction(condition, body);
 }
@@ -161,7 +162,7 @@ private Instruction parseRepeat() {
 
     int count = (int) Double.parseDouble(num.getValue());
 
-    advance(); // TIMES
+    expect(TokenType.TIMES, "Expected 'times'"); // TIMES
 
     List<Instruction> body = new ArrayList<>();
 
@@ -170,4 +171,11 @@ private Instruction parseRepeat() {
     body.add(parseInstruction());
 
     return new RepeatInstruction(count, body);
+}
+private void expect(TokenType type, String msg) {
+    if (peek().getType() != type) {
+        throw new RuntimeException(msg + " at line " + peek().getLine());
+    }
+    advance();
+}
 }
