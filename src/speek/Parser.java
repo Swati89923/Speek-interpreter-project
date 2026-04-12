@@ -4,16 +4,17 @@ import java.util.*;
 
 public class Parser {
 
-    private List<Token> tokens;
+    private final List<Token> tokens;
     private int pos = 0;
 
     public Parser(List<Token> tokens) {
-        this.tokens = tokens;
+        this.tokens = List.copyOf(tokens); // immutable defensive copy
     }
 
     // ================= ENTRY =================
 
     public List<Instruction> parse() {
+
         List<Instruction> list = new ArrayList<>();
 
         while (!isAtEnd()) {
@@ -22,23 +23,35 @@ public class Parser {
 
             list.add(parseInstruction());
         }
-        return list;
+
+        return List.copyOf(list); // immutable result
     }
 
     private Instruction parseInstruction() {
+
         Token t = peek();
 
-        if (t.getType() == TokenType.LET) return parseAssign();
-        if (t.getType() == TokenType.SAY) return parsePrint();
-        if (t.getType() == TokenType.IF) return parseIf();
-        if (t.getType() == TokenType.REPEAT) return parseRepeat();
-
-        throw new RuntimeException("Unknown instruction at line " + t.getLine());
+        switch (t.getType()) {
+            case LET:
+                return parseAssign();
+            case SAY:
+                return parsePrint();
+            case IF:
+                return parseIf();
+            case REPEAT:
+                return parseRepeat();
+            default:
+                throw new RuntimeException(
+                        "Unknown instruction at line " + t.getLine());
+        }
     }
 
     // ================= BASIC HELPERS =================
 
     private Token peek() {
+        if (pos >= tokens.size()) {
+            return tokens.get(tokens.size() - 1);
+        }
         return tokens.get(pos);
     }
 
@@ -47,7 +60,7 @@ public class Parser {
     }
 
     private boolean isAtEnd() {
-        return peek().getType() == TokenType.EOF;
+        return pos >= tokens.size() || peek().getType() == TokenType.EOF;
     }
 
     private void skipNewlines() {
@@ -56,26 +69,45 @@ public class Parser {
         }
     }
 
-    private void expect(TokenType type, String msg) {
-        if (peek().getType() != type) {
-            throw new RuntimeException(msg + " at line " + peek().getLine());
+    private Token expect(TokenType type, String msg) {
+
+        Token t = peek();
+
+        if (t.getType() != type) {
+            throw new RuntimeException(
+                    msg + " but found " + t.getType() +
+                            " at line " + t.getLine());
         }
-        advance();
+
+        return advance();
+    }
+
+    // GENERIC TOKEN MATCHER
+    private boolean match(TokenType... types) {
+
+        for (TokenType type : types) {
+
+            if (!isAtEnd() && peek().getType() == type) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ================= EXPRESSIONS =================
 
-    // lowest level → comparison
+    // comparison
     private Expression parseComparison() {
 
         Expression left = parseExpression();
 
-        while (!isAtEnd() &&
-                (peek().getType() == TokenType.IS_GREATER_THAN ||
-                 peek().getType() == TokenType.IS_LESS_THAN ||
-                 peek().getType() == TokenType.IS_EQUAL_TO)) {
+        while (match(TokenType.IS_GREATER_THAN,
+                     TokenType.IS_LESS_THAN,
+                     TokenType.IS_EQUAL_TO)) {
 
-            String op = advance().getValue();
+            String op = tokens.get(pos - 1).getValue();
             Expression right = parseExpression();
 
             left = new BinaryOpNode(left, op, right);
@@ -89,11 +121,9 @@ public class Parser {
 
         Expression left = parseTerm();
 
-        while (!isAtEnd() &&
-                (peek().getType() == TokenType.PLUS ||
-                 peek().getType() == TokenType.MINUS)) {
+        while (match(TokenType.PLUS, TokenType.MINUS)) {
 
-            String op = advance().getValue();
+            String op = tokens.get(pos - 1).getValue();
             Expression right = parseTerm();
 
             left = new BinaryOpNode(left, op, right);
@@ -107,11 +137,9 @@ public class Parser {
 
         Expression left = parsePrimary();
 
-        while (!isAtEnd() &&
-                (peek().getType() == TokenType.STAR ||
-                 peek().getType() == TokenType.SLASH)) {
+        while (match(TokenType.STAR, TokenType.SLASH)) {
 
-            String op = advance().getValue();
+            String op = tokens.get(pos - 1).getValue();
             Expression right = parsePrimary();
 
             left = new BinaryOpNode(left, op, right);
@@ -124,24 +152,26 @@ public class Parser {
 
         Token t = peek();
 
-        if (t.getType() == TokenType.NUMBER) {
-            advance();
-            return new NumberNode(Double.parseDouble(t.getValue()));
-        }
+        switch (t.getType()) {
 
-        if (t.getType() == TokenType.STRING) {
-            advance();
-            return new StringNode(t.getValue());
-        }
+            case NUMBER:
+                advance();
+                return new NumberNode(Double.parseDouble(t.getValue()));
 
-        if (t.getType() == TokenType.IDENTIFIER) {
-            advance();
-            return new VariableNode(t.getValue());
-        }
+            case STRING:
+                advance();
+                return new StringNode(t.getValue());
 
-        throw new RuntimeException(
-            "Line " + t.getLine() + " : Expected number / string / variable"
-        );
+            case IDENTIFIER:
+                advance();
+                return new VariableNode(t.getValue());
+
+            default:
+                throw new RuntimeException(
+                        "Line " + t.getLine()
+                                + " : Expected number / string / variable"
+                );
+        }
     }
 
     // ================= INSTRUCTIONS =================
@@ -150,11 +180,8 @@ public class Parser {
 
         advance(); // LET
 
-        Token name = peek();
-        if (name.getType() != TokenType.IDENTIFIER) {
-            throw new RuntimeException("Expected variable name at line " + name.getLine());
-        }
-        advance();
+        Token name = expect(TokenType.IDENTIFIER,
+                "Expected variable name");
 
         expect(TokenType.BE, "Expected 'be'");
 
@@ -185,22 +212,21 @@ public class Parser {
 
         skipNewlines();
 
-        // THEN block
         while (!isAtEnd() &&
-               peek().getType() != TokenType.ELSE &&
-               peek().getType() != TokenType.NEWLINE) {
+                peek().getType() != TokenType.ELSE &&
+                peek().getType() != TokenType.NEWLINE) {
 
             thenBody.add(parseInstruction());
             skipNewlines();
         }
 
-        // ELSE block (optional)
         if (!isAtEnd() && peek().getType() == TokenType.ELSE) {
+
             advance(); // ELSE
             skipNewlines();
 
             while (!isAtEnd() &&
-                   peek().getType() != TokenType.NEWLINE) {
+                    peek().getType() != TokenType.NEWLINE) {
 
                 elseBody.add(parseInstruction());
                 skipNewlines();
@@ -214,11 +240,8 @@ public class Parser {
 
         advance(); // REPEAT
 
-        Token num = peek();
-        if (num.getType() != TokenType.NUMBER) {
-            throw new RuntimeException("Expected number after repeat at line " + num.getLine());
-        }
-        advance();
+        Token num = expect(TokenType.NUMBER,
+                "Expected number after repeat");
 
         int count = (int) Double.parseDouble(num.getValue());
 
@@ -229,7 +252,7 @@ public class Parser {
         skipNewlines();
 
         while (!isAtEnd() &&
-               peek().getType() != TokenType.NEWLINE) {
+                peek().getType() != TokenType.NEWLINE) {
 
             body.add(parseInstruction());
             skipNewlines();
