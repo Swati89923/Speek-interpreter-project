@@ -8,14 +8,14 @@ public class Parser {
     private int pos = 0;
 
     public Parser(List<Token> tokens) {
-        this.tokens = List.copyOf(tokens); // immutable defensive copy
+        this.tokens = List.copyOf(tokens);
     }
 
     // ================= ENTRY =================
 
     public List<Instruction> parse() {
 
-        List<Instruction> list = new ArrayList<>();
+        List<Instruction> list = createList();
 
         while (!isAtEnd()) {
             skipNewlines();
@@ -24,7 +24,7 @@ public class Parser {
             list.add(parseInstruction());
         }
 
-        return List.copyOf(list); // immutable result
+        return List.copyOf(list);
     }
 
     private Instruction parseInstruction() {
@@ -44,6 +44,21 @@ public class Parser {
                 throw new RuntimeException(
                         "Unknown instruction at line " + t.getLine());
         }
+    }
+
+    // ================= GENERIC HELPERS =================
+
+    // Generic List Creator
+    private static <T> List<T> createList() {
+        return new ArrayList<>();
+    }
+
+    // Generic Null Checker
+    private static <T> T require(T obj, String msg) {
+        if (obj == null) {
+            throw new RuntimeException(msg);
+        }
+        return obj;
     }
 
     // ================= BASIC HELPERS =================
@@ -82,7 +97,7 @@ public class Parser {
         return advance();
     }
 
-    // GENERIC TOKEN MATCHER
+    // Generic matcher
     private boolean match(TokenType... types) {
 
         for (TokenType type : types) {
@@ -98,14 +113,13 @@ public class Parser {
 
     // ================= EXPRESSIONS =================
 
-    // comparison
     private Expression parseComparison() {
 
         Expression left = parseExpression();
 
         while (match(TokenType.IS_GREATER_THAN,
-                     TokenType.IS_LESS_THAN,
-                     TokenType.IS_EQUAL_TO)) {
+                TokenType.IS_LESS_THAN,
+                TokenType.IS_EQUAL_TO)) {
 
             String op = tokens.get(pos - 1).getValue();
             Expression right = parseExpression();
@@ -116,7 +130,6 @@ public class Parser {
         return left;
     }
 
-    // + -
     private Expression parseExpression() {
 
         Expression left = parseTerm();
@@ -132,7 +145,6 @@ public class Parser {
         return left;
     }
 
-    // * /
     private Expression parseTerm() {
 
         Expression left = parsePrimary();
@@ -178,37 +190,40 @@ public class Parser {
 
     private Instruction parseAssign() {
 
-        advance(); // LET
+        advance();
 
         Token name = expect(TokenType.IDENTIFIER,
                 "Expected variable name");
 
         expect(TokenType.BE, "Expected 'be'");
 
-        Expression expr = parseComparison();
+        Expression expr = require(parseComparison(),
+                "Expression expected");
 
         return new AssignInstruction(name.getValue(), expr);
     }
 
     private Instruction parsePrint() {
 
-        advance(); // SAY
+        advance();
 
-        Expression expr = parseComparison();
+        Expression expr = require(parseComparison(),
+                "Expression expected");
 
         return new PrintInstruction(expr);
     }
 
     private Instruction parseIf() {
 
-        advance(); // IF
+        advance();
 
-        Expression condition = parseComparison();
+        Expression condition = require(parseComparison(),
+                "Condition expected");
 
         expect(TokenType.THEN, "Expected 'then'");
 
-        List<Instruction> thenBody = new ArrayList<>();
-        List<Instruction> elseBody = new ArrayList<>();
+        List<Instruction> thenBody = createList();
+        List<Instruction> elseBody = createList();
 
         skipNewlines();
 
@@ -222,7 +237,7 @@ public class Parser {
 
         if (!isAtEnd() && peek().getType() == TokenType.ELSE) {
 
-            advance(); // ELSE
+            advance();
             skipNewlines();
 
             while (!isAtEnd() &&
@@ -238,7 +253,7 @@ public class Parser {
 
     private Instruction parseRepeat() {
 
-        advance(); // REPEAT
+        advance();
 
         Token num = expect(TokenType.NUMBER,
                 "Expected number after repeat");
@@ -247,7 +262,7 @@ public class Parser {
 
         expect(TokenType.TIMES, "Expected 'times'");
 
-        List<Instruction> body = new ArrayList<>();
+        List<Instruction> body = createList();
 
         skipNewlines();
 
