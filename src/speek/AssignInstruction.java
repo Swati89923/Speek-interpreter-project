@@ -1,18 +1,21 @@
 package speek;
 
-public class AssignInstruction implements Instruction {
+public class AssignInstruction<T> implements Instruction {
 
     private String variableName;
-    private Expression expression;
+    private Expression<T> expression;
 
-    public AssignInstruction(String variableName, Expression expression) {
+    public AssignInstruction(String variableName, Expression<T> expression) {
         this.variableName = variableName;
         this.expression = expression;
     }
 
     @Override
-    public void execute(Environment env) {
-        Object value = expression.evaluate(env);
-        env.set(variableName, value);
+    public void execute(Environment<?> env) {
+        @SuppressWarnings("unchecked")
+        Environment<T> typedEnv = (Environment<T>) env;
+
+        T value = expression.evaluate(typedEnv);
+        typedEnv.set(variableName, value);
     }
 }
