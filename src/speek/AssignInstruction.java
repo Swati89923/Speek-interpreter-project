@@ -11,7 +11,7 @@ public class AssignInstruction<T> implements Instruction {
     }
 
     @Override
-    public void execute(Environment<?> env) {
+    public void execute(Environment env){
         @SuppressWarnings("unchecked")
         Environment<T> typedEnv = (Environment<T>) env;
 
