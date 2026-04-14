@@ -8,7 +8,7 @@ public class Interpreter {
 
         // Step 1: Tokenize
         Tokenizer tokenizer = new Tokenizer(sourceCode);
-        List<Token> tokens = tokenizer.tokenize();
+       List<Token<?>> tokens = tokenizer.tokenize();
 
         // Step 2: Parse
         Parser parser = new Parser(tokens);
