@@ -4,10 +4,10 @@ import java.util.*;
 
 public class Parser {
 
-    private final List<Token> tokens;
+    private final List<Token<?>> tokens;
     private int pos = 0;
 
-    public Parser(List<Token> tokens) {
+    public Parser(List<Token<?>> tokens) {
         this.tokens = List.copyOf(tokens);
     }
 
@@ -15,7 +15,7 @@ public class Parser {
 
     public List<Instruction> parse() {
 
-        List<Instruction> list = createList();
+        List<Instruction> list = new ArrayList<>();
 
         while (!isAtEnd()) {
             skipNewlines();
@@ -29,7 +29,7 @@ public class Parser {
 
     private Instruction parseInstruction() {
 
-        Token t = peek();
+        Token<?> t = peek();
 
         switch (t.getType()) {
             case LET:
@@ -46,31 +46,16 @@ public class Parser {
         }
     }
 
-    // ================= GENERIC HELPERS =================
-
-    // Generic List Creator
-    private static <T> List<T> createList() {
-        return new ArrayList<>();
-    }
-
-    // Generic Null Checker
-    private static <T> T require(T obj, String msg) {
-        if (obj == null) {
-            throw new RuntimeException(msg);
-        }
-        return obj;
-    }
-
     // ================= BASIC HELPERS =================
 
-    private Token peek() {
+    private Token<?> peek() {
         if (pos >= tokens.size()) {
             return tokens.get(tokens.size() - 1);
         }
         return tokens.get(pos);
     }
 
-    private Token advance() {
+    private Token<?> advance() {
         return tokens.get(pos++);
     }
 
@@ -84,9 +69,9 @@ public class Parser {
         }
     }
 
-    private Token expect(TokenType type, String msg) {
+    private Token<?> expect(TokenType type, String msg) {
 
-        Token t = peek();
+        Token<?> t = peek();
 
         if (t.getType() != type) {
             throw new RuntimeException(
@@ -97,7 +82,6 @@ public class Parser {
         return advance();
     }
 
-    // Generic matcher
     private boolean match(TokenType... types) {
 
         for (TokenType type : types) {
@@ -113,16 +97,16 @@ public class Parser {
 
     // ================= EXPRESSIONS =================
 
-    private Expression parseComparison() {
+    private Expression<?> parseComparison() {
 
-        Expression left = parseExpression();
+        Expression<?> left = parseExpression();
 
         while (match(TokenType.IS_GREATER_THAN,
-                TokenType.IS_LESS_THAN,
-                TokenType.IS_EQUAL_TO)) {
+                     TokenType.IS_LESS_THAN,
+                     TokenType.IS_EQUAL_TO)) {
 
-            String op = tokens.get(pos - 1).getValue();
-            Expression right = parseExpression();
+            String op = (String) tokens.get(pos - 1).getValue();
+            Expression<?> right = parseExpression();
 
             left = new BinaryOpNode(left, op, right);
         }
@@ -130,14 +114,14 @@ public class Parser {
         return left;
     }
 
-    private Expression parseExpression() {
+    private Expression<?> parseExpression() {
 
-        Expression left = parseTerm();
+        Expression<?> left = parseTerm();
 
         while (match(TokenType.PLUS, TokenType.MINUS)) {
 
-            String op = tokens.get(pos - 1).getValue();
-            Expression right = parseTerm();
+            String op = (String) tokens.get(pos - 1).getValue();
+            Expression<?> right = parseTerm();
 
             left = new BinaryOpNode(left, op, right);
         }
@@ -145,14 +129,14 @@ public class Parser {
         return left;
     }
 
-    private Expression parseTerm() {
+    private Expression<?> parseTerm() {
 
-        Expression left = parsePrimary();
+        Expression<?> left = parsePrimary();
 
         while (match(TokenType.STAR, TokenType.SLASH)) {
 
-            String op = tokens.get(pos - 1).getValue();
-            Expression right = parsePrimary();
+            String op = (String) tokens.get(pos - 1).getValue();
+            Expression<?> right = parsePrimary();
 
             left = new BinaryOpNode(left, op, right);
         }
@@ -160,23 +144,23 @@ public class Parser {
         return left;
     }
 
-    private Expression parsePrimary() {
+    private Expression<?> parsePrimary() {
 
-        Token t = peek();
+        Token<?> t = peek();
 
         switch (t.getType()) {
 
             case NUMBER:
                 advance();
-                return new NumberNode(Double.parseDouble(t.getValue()));
+                return new NumberNode((Double) t.getValue());
 
             case STRING:
                 advance();
-                return new StringNode(t.getValue());
+                return new StringNode((String) t.getValue());
 
             case IDENTIFIER:
                 advance();
-                return new VariableNode(t.getValue());
+                return new VariableNode<>( (String) t.getValue() );
 
             default:
                 throw new RuntimeException(
@@ -192,38 +176,35 @@ public class Parser {
 
         advance();
 
-        Token name = expect(TokenType.IDENTIFIER,
+        Token<?> name = expect(TokenType.IDENTIFIER,
                 "Expected variable name");
 
         expect(TokenType.BE, "Expected 'be'");
 
-        Expression expr = require(parseComparison(),
-                "Expression expected");
+        Expression<?> expr = parseComparison();
 
-        return new AssignInstruction(name.getValue(), expr);
+        return new AssignInstruction<>( (String) name.getValue(), expr );
     }
 
     private Instruction parsePrint() {
 
         advance();
 
-        Expression expr = require(parseComparison(),
-                "Expression expected");
+        Expression<?> expr = parseComparison();
 
-        return new PrintInstruction(expr);
+        return new PrintInstruction<>(expr);
     }
 
     private Instruction parseIf() {
 
         advance();
 
-        Expression condition = require(parseComparison(),
-                "Condition expected");
+        Expression<?> condition = parseComparison();
 
         expect(TokenType.THEN, "Expected 'then'");
 
-        List<Instruction> thenBody = createList();
-        List<Instruction> elseBody = createList();
+        List<Instruction> thenBody = new ArrayList<>();
+        List<Instruction> elseBody = new ArrayList<>();
 
         skipNewlines();
 
@@ -248,21 +229,25 @@ public class Parser {
             }
         }
 
-        return new IfInstruction(condition, thenBody, elseBody);
+        return new IfInstruction(
+                (Expression<Boolean>) condition,
+                thenBody,
+                elseBody
+        );
     }
 
     private Instruction parseRepeat() {
 
         advance();
 
-        Token num = expect(TokenType.NUMBER,
+        Token<?> num = expect(TokenType.NUMBER,
                 "Expected number after repeat");
 
-        int count = (int) Double.parseDouble(num.getValue());
+        int count = ((Double) num.getValue()).intValue();
 
         expect(TokenType.TIMES, "Expected 'times'");
 
-        List<Instruction> body = createList();
+        List<Instruction> body = new ArrayList<>();
 
         skipNewlines();
 
