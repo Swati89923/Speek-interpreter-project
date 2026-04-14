@@ -6,8 +6,8 @@ public class Parser {
 
     private final List<Token<?>> tokens;
     private int pos = 0;
-
-    public Parser(List<Token<?>> tokens) {
+    
+    public Parser(List<Token<?>> tokens){
         this.tokens = List.copyOf(tokens);
     }
 
@@ -160,8 +160,7 @@ public class Parser {
 
             case IDENTIFIER:
                 advance();
-                return new VariableNode<>( (String) t.getValue() );
-
+                return new VariableNode((String) t.getValue());
             default:
                 throw new RuntimeException(
                         "Line " + t.getLine()
@@ -192,7 +191,7 @@ public class Parser {
 
         Expression<?> expr = parseComparison();
 
-        return new PrintInstruction<>(expr);
+        return new PrintInstruction(expr);
     }
 
     private Instruction parseIf() {
