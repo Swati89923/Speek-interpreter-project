@@ -1,5 +1,5 @@
 package speek;
 
-public interface Expression {
-    Object evaluate(Environment env);
+public interface Expression<T> {
+    T evaluate(Environment<?> env);
 }
