@@ -4,11 +4,11 @@ import java.util.List;
 
 public class IfInstruction implements Instruction {
 
-    private Expression condition;
+    private Expression<Boolean> condition;
     private List<Instruction> thenBody;
     private List<Instruction> elseBody;
 
-    public IfInstruction(Expression condition,
+    public IfInstruction(Expression<Boolean> condition,
                          List<Instruction> thenBody,
                          List<Instruction> elseBody) {
         this.condition = condition;
@@ -17,18 +17,18 @@ public class IfInstruction implements Instruction {
     }
 
     @Override
-    public void execute(Environment env) {
+    public void execute(Environment<?> env) {
 
-        Object result = condition.evaluate(env);
+        @SuppressWarnings("unchecked")
+        Environment<Boolean> boolEnv = (Environment<Boolean>) env;
 
-        if (result instanceof Boolean && (Boolean) result) {
+        Boolean result = condition.evaluate(boolEnv);
 
+        if (result != null && result) {
             for (Instruction inst : thenBody) {
                 inst.execute(env);
             }
-
         } else {
-
             for (Instruction inst : elseBody) {
                 inst.execute(env);
             }
