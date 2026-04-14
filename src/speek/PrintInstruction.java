@@ -1,16 +1,19 @@
 package speek;
 
-public class PrintInstruction implements Instruction {
+public class PrintInstruction<T> implements Instruction {
 
-    private Expression expression;
+    private Expression<T> expression;
 
-    public PrintInstruction(Expression expression) {
+    public PrintInstruction(Expression<T> expression) {
         this.expression = expression;
     }
 
     @Override
-    public void execute(Environment env) {
-        Object value = expression.evaluate(env);
+    public void execute(Environment<?> env) {
+        @SuppressWarnings("unchecked")
+        Environment<T> typedEnv = (Environment<T>) env;
+
+        T value = expression.evaluate(typedEnv);
         System.out.println(value);
     }
 }

@@ -1,6 +1,6 @@
 package speek;
 
-public class NumberNode implements Expression {
+public class NumberNode implements Expression<Double> {
 
     private double value;
 
@@ -9,7 +9,7 @@ public class NumberNode implements Expression {
     }
 
     @Override
-    public Object evaluate(Environment env) {
+    public Double evaluate(Environment<?> env) {
         return value;
     }
 }

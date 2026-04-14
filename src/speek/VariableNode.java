@@ -1,6 +1,6 @@
 package speek;
 
-public class VariableNode implements Expression {
+public class VariableNode<T> implements Expression<T> {
 
     private String name;
 
@@ -9,7 +9,8 @@ public class VariableNode implements Expression {
     }
 
     @Override
-    public Object evaluate(Environment env) {
-        return env.get(name);
+    @SuppressWarnings("unchecked")
+    public T evaluate(Environment<?> env) {
+        return (T) ((Environment<?>) env).get(name);
     }
 }
