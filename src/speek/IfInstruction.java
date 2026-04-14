@@ -17,7 +17,7 @@ public class IfInstruction implements Instruction {
     }
 
     @Override
-    public void execute(Environment<?> env) {
+  public void execute(Environment env){
 
         @SuppressWarnings("unchecked")
         Environment<Boolean> boolEnv = (Environment<Boolean>) env;
