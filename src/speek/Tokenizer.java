@@ -93,24 +93,103 @@ public class Tokenizer {
         return new Token<>(TokenType.NUMBER, Double.parseDouble(sb.toString()), startLine);
     }
 
-    private Token<String> readWord() {
-        int startLine = line;
-        String word = readSingleWord();
+    private Token<?> readWord() {
+    int startLine = line;
+    String word = readSingleWord();
 
-        switch (word) {
-            case "let": return new Token<>(TokenType.LET, word, startLine);
-            case "be": return new Token<>(TokenType.BE, word, startLine);
-            case "say": return new Token<>(TokenType.SAY, word, startLine);
-            case "if": return new Token<>(TokenType.IF, word, startLine);
-            case "then": return new Token<>(TokenType.THEN, word, startLine);
-            case "repeat": return new Token<>(TokenType.REPEAT, word, startLine);
-            case "times": return new Token<>(TokenType.TIMES, word, startLine);
-            case "else": return new Token<>(TokenType.ELSE, word, startLine);
+    // HANDLE MULTI-WORD OPERATORS
+    if (word.equals("is")) {
 
-            default:
-                return new Token<>(TokenType.IDENTIFIER, word, startLine);
+        int savedPos = pos;
+
+        skipSpaces();
+        String next1 = peekWord();
+
+        skipSpaces();
+        String next2 = peekSecondWord(next1);
+
+        String combined = "is " + next1 + " " + next2;
+
+        if (combined.equals("is less than") ||
+            combined.equals("is greater than") ||
+            combined.equals("is equal to")) {
+
+            // consume properly
+            skipSpaces();
+            readSingleWord(); // less/greater/equal
+            skipSpaces();
+            readSingleWord(); // than/to
+
+            switch (combined) {
+                case "is less than":
+                    return new Token<>(TokenType.IS_LESS_THAN, combined, startLine);
+                case "is greater than":
+                    return new Token<>(TokenType.IS_GREATER_THAN, combined, startLine);
+                case "is equal to":
+                    return new Token<>(TokenType.IS_EQUAL_TO, combined, startLine);
+            }
         }
+
+        // rollback if not matched
+        pos = savedPos;
     }
+
+    // NORMAL KEYWORDS
+    switch (word) {
+        case "let": return new Token<>(TokenType.LET, word, startLine);
+        case "be": return new Token<>(TokenType.BE, word, startLine);
+        case "say": return new Token<>(TokenType.SAY, word, startLine);
+        case "if": return new Token<>(TokenType.IF, word, startLine);
+        case "then": return new Token<>(TokenType.THEN, word, startLine);
+        case "repeat": return new Token<>(TokenType.REPEAT, word, startLine);
+        case "times": return new Token<>(TokenType.TIMES, word, startLine);
+        case "else": return new Token<>(TokenType.ELSE, word, startLine);
+
+        default:
+            return new Token<>(TokenType.IDENTIFIER, word, startLine);
+    }
+}
+    private void skipSpaces() {
+    while (pos < source.length() && source.charAt(pos) == ' ') {
+        pos++;
+    }
+}
+
+private String peekWord() {
+    int temp = pos;
+    StringBuilder sb = new StringBuilder();
+
+    while (temp < source.length() &&
+           Character.isLetter(source.charAt(temp))) {
+        sb.append(source.charAt(temp));
+        temp++;
+    }
+    return sb.toString();
+}
+
+private String peekSecondWord(String firstWord) {
+    int temp = pos;
+
+    // skip first word
+    while (temp < source.length() &&
+           Character.isLetter(source.charAt(temp))) {
+        temp++;
+    }
+
+    // skip spaces
+    while (temp < source.length() && source.charAt(temp) == ' ') {
+        temp++;
+    }
+
+    StringBuilder sb = new StringBuilder();
+    while (temp < source.length() &&
+           Character.isLetter(source.charAt(temp))) {
+        sb.append(source.charAt(temp));
+        temp++;
+    }
+
+    return sb.toString();
+}
 
     private String readSingleWord() {
         StringBuilder sb = new StringBuilder();
