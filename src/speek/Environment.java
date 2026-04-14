@@ -3,21 +3,15 @@ package speek;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Environment {
+public class Environment<T> {
 
-    private Map<String, Object> variables;
+    private Map<String, T> variables = new HashMap<>();
 
-    public Environment() {
-        variables = new HashMap<>();
-    }
-
-    // store value
-    public void set(String name, Object value) {
+    public void set(String name, T value) {
         variables.put(name, value);
     }
 
-    // get value
-    public Object get(String name) {
+    public T get(String name) {
         if (!variables.containsKey(name)) {
             throw new RuntimeException("Variable not defined: " + name);
         }
