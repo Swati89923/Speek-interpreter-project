@@ -223,10 +223,3 @@ Possible enhancements include:
 - Extended grammar rules
 
 ---
-
-## Author
-
-**Swati**  
-B.Tech Computer Science Student
-
-This project was developed as part of an academic project to understand **interpreter design and programming language implementation**.
